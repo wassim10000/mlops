@@ -25,7 +25,8 @@ jobs:
 
       - name: Run unit tests
         run: |
-          pytest tests/  # assumes your tests are in a 'tests' folder
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          pytest tests/
 
       - name: Build Docker image
         run: |
