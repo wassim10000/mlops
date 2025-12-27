@@ -53,11 +53,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mlops-app-image
-          path: .
+      # - name: Download Docker image artifact
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: mlops-app-image
+      #     path: .
 
       - name: Deploy to VM via SSH
         uses: appleboy/ssh-action@v0.1.10
@@ -67,7 +67,7 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             cd ~/mlops
-            git pull origin main
+            git pull origin master
             source venv/bin/activate
             pip install -r requirements.txt
             if [ ! -f ~/mlops/best_combined_resnet_model.pth ]; then
