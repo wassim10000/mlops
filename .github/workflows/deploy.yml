@@ -23,6 +23,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Download model file
+        run: |
+          if [ ! -f best_combined_resnet_model.pth ]; then
+            wget https://storage.googleapis.com/mlopsbucketwassim/best_combined_resnet_model.pth -O best_combined_resnet_model.pth
+          fi
+
       - name: Run unit tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
@@ -64,6 +70,9 @@ jobs:
             git pull origin main
             source venv/bin/activate
             pip install -r requirements.txt
+            if [ ! -f ~/mlops/best_combined_resnet_model.pth ]; then
+              wget https://storage.googleapis.com/mlopsbucketwassim/best_combined_resnet_model.pth -O ~/mlops/best_combined_resnet_model.pth
+            fi
             pkill streamlit || true
             nohup streamlit run app.py --server.address=0.0.0.0 &
             sleep 10
