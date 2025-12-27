@@ -1,4 +1,4 @@
-name: Auto Deploy to VM
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  deploy:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +23,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Run unit tests
+        run: |
+          pytest tests/  # assumes your tests are in a 'tests' folder
+
+      - name: Build Docker image
+        run: |
+          docker build -t mlops-app:latest .
+
+      - name: Save Docker image as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlops-app-image
+          path: mlops-app.tar
+        if: success()
+
+  deploy:
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mlops-app-image
+          path: .
+
       - name: Deploy to VM via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -36,3 +65,11 @@ jobs:
             pip install -r requirements.txt
             pkill streamlit || true
             nohup streamlit run app.py --server.address=0.0.0.0 &
+            sleep 10
+            curl -f http://localhost:8501 || (
+              echo "Deployment failed, rolling back..."
+              git checkout HEAD~1
+              pip install -r requirements.txt
+              pkill streamlit || true
+              nohup streamlit run app.py --server.address=0.0.0.0 &
+            )
